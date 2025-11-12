@@ -19,11 +19,28 @@ This project aims to build a Graph Neural Network (GNN) for analyzing the IBM mo
 
 ## Dataset
 We are currently using the HI-Small dataset, which includes:
-- **Nodes**: Representing account numbers.
-- **Edges**: Representing transactions between accounts.
-- **Node Labels**: None.
-- **Edge Labels**: A tensor with two labels, one for sent transactions and one for received transactions.
-- **Encoding**: One-hot encoding for labels.
+
+### HI-Small_accounts.csv
+This file contains information about bank accounts with the following headers:
+- **Bank Name**: The name of the bank.
+- **Bank ID**: A unique identifier for the bank.
+- **Account Number**: The account number associated with the entity.
+- **Entity ID**: A unique identifier for the entity.
+- **Entity Name**: The name of the entity (e.g., Sole Proprietorship, Corporation).
+
+### HI-Small_Trans.csv
+This file contains transaction data with the following headers:
+- **Timestamp**: The date and time of the transaction.
+- **From Bank**: The bank initiating the transaction.
+- **Account**: The account number initiating the transaction.
+- **To Bank**: The receiving bank.
+- **Account**: The receiving account number.
+- **Amount Received**: The amount received in the transaction.
+- **Receiving Currency**: The currency in which the amount was received.
+- **Amount Paid**: The amount paid in the transaction.
+- **Payment Currency**: The currency in which the payment was made.
+- **Payment Format**: The format of the payment (e.g., Cheque, Reinvestment).
+- **Is Laundering**: A flag indicating whether the transaction is suspected of money laundering (0 for no, 1 for yes).
 
 Future iterations may involve larger datasets for more comprehensive analysis.
 
