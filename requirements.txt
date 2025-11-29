@@ -1,0 +1,9 @@
+matplotlib
+numpy
+pandas
+torchmetrics>=1.8.2
+torchdata==0.7.1
+pyyaml
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch
+torchvision
