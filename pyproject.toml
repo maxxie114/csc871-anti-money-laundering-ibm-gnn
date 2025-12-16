@@ -10,9 +10,16 @@ dependencies = [
     "numpy>=2.3.5",
     "pandas>=2.3.3",
     "torch==2.9.1",
+    "torchvision",
     "torchmetrics>=1.8.2",
     "torch_geometric",
-    "scikit-learn"
+    "torchdata==0.7.1",
+    "scikit-learn",
+    "tqdm",
+    "pyyaml",
+    "seaborn",
+    "xgboost",
+    "kaggle",
 ]
 
 # 1. Define the CUDA 12.8 PyTorch Index

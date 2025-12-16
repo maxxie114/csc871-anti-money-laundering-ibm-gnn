@@ -1,115 +1,145 @@
-# csc865-anti-money-laundering-ibm
-A GNN project on anti-money laundering using IBM's transaction dataset
+# Anti-Money Laundering Detection
 
-# Anti-Money Laundering with Graph Neural Networks
+This project, developed for **CSC871 - Deep Learning**, explores various machine learning approaches to detect money laundering activities in financial transactions using the IBM Anti-Money Laundering (AML) dataset. It includes multiple experiments ranging from Graph Neural Networks (GNNs) to traditional tabular models like MLP and XGBoost.
+
+## Authors
+- Andy Byeon
+- Chris Randall
+- Max Xie
 
 ## Table of Contents
-- [Project Overview](#project-overview)
+- [Project Structure](#project-structure)
+- [Models and Experiments](#models-and-experiments)
+  - [GNN: TransformerConv (Main)](#gnn-transformerconv-main)
+  - [GNN: GINEConv](#gnn-gineconv)
+  - [Tabular Baseline: MLP](#tabular-baseline-mlp)
+  - [Tabular Baseline: XGBoost](#tabular-baseline-xgboost)
 - [Dataset](#dataset)
-- [Model Details](#model-details)
-- [Technologies Used](#technologies-used)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Future Plans](#future-plans)
+- [Utilities](#utilities)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Project Overview
-This project aims to build a Graph Neural Network (GNN) for analyzing the IBM money laundering dataset. The goal is to detect patterns and anomalies in financial transactions that may indicate money laundering activities. The project is being developed entirely in Jupyter Notebook files, leveraging PyTorch and TorchMetrics for model implementation.
+## Project Structure
+
+```
+.
+├───.gitattributes
+├───.gitignore
+├───.python-version
+├───anti_money_laundering_ibm.ipynb
+├───cuda_diagnose.py
+├───gine-model.ipynb
+├───gine-with-batches-model.ipynb
+├───LICENSE
+├───pyproject.toml
+├───README.md
+├───requirements.txt
+├───tabular_mlp.ipynb
+├───tabular_xgboost.ipynb
+├───uv.lock
+├───dataset/
+│   ├───HI-Small_accounts.csv
+│   └───HI-Small_Trans.csv
+└───plots/
+    ├───best_f1_mlp.png
+    ├───roc_pr_mlp.png
+    └───target_fpr_mlp.png
+```
+
+## Models and Experiments
+
+This repository contains several Jupyter notebooks, each representing a different modeling approach to the AML problem.
+
+### GNN: TransformerConv (Main)
+- **File**: `anti_money_laundering_ibm.ipynb`
+- **Approach**: This is the primary and most developed experiment. It models the transaction data as a graph and uses a Graph Neural Network with `TransformerConv` layers from PyTorch Geometric.
+- **Features**:
+    - **Data Splitting**: Stratified 60/20/20 split to maintain the class imbalance ratio across train, validation, and test sets.
+    - **Training**: A sophisticated training loop that supports batched training on edge chunks. It includes a fallback mechanism for environments without `pyg-lib` or `torch-sparse`.
+    - **Evaluation**: Implements dynamic threshold calibration based on a target False Positive Rate (FPR) on the validation set, which is crucial for imbalanced datasets.
+
+### GNN: GINEConv
+- **Files**: `gine-model.ipynb`, `gine-with-batches-model.ipynb`
+- **Approach**: These notebooks explore an alternative GNN architecture using Graph Isomorphism Network with Edge features (`GINEConv`).
+- **Features**:
+    - **Feature Engineering**: Uses one-hot encoding for categorical node and edge features.
+    - **Data Splitting**: Employs a chronological 60/20/20 split, simulating a more realistic time-based evaluation.
+    - **Training**:
+        - `gine-model.ipynb`: Trains on the full graph at once.
+        - `gine-with-batches-model.ipynb`: An enhanced version that uses `LinkNeighborLoader` for memory-efficient batched training.
+
+### Tabular Baseline: MLP
+- **File**: `tabular_mlp.ipynb`
+- **Approach**: This notebook serves as a strong non-GNN baseline. It ignores the graph structure and treats the problem as a traditional tabular classification task.
+- **Features**:
+    - **Feature Engineering**: Creates a rich set of features, including time-based features (hour, day of week), transaction-specific features (e.g., `same_bank`, `amount_ratio`), and more.
+    - **Model**: A Multi-Layer Perceptron (MLP) built with PyTorch, using embedding layers to handle categorical features.
+    - **Evaluation**: Provides a comprehensive evaluation framework, analyzing model performance at multiple decision thresholds (default 0.5, best F1-score, and a target FPR).
+
+### Tabular Baseline: XGBoost
+- **File**: `tabular_xgboost.ipynb`
+- **Approach**: A second tabular baseline that uses the powerful XGBoost library, a state-of-the-art gradient boosting model.
+- **Features**:
+    - **Feature Engineering**: Uses the exact same feature set as the MLP notebook for a fair comparison.
+    - **Model**: An `XGBClassifier` tuned for the imbalanced dataset, using `scale_pos_weight` to handle the class distribution.
+    - **Preprocessing**: Uses integer encoding for categorical features, which is efficient for tree-based models.
 
 ## Dataset
-We are currently using the HI-Small dataset, which includes:
 
-### HI-Small_accounts.csv
-This file contains information about bank accounts with the following headers:
-- **Bank Name**: The name of the bank.
-- **Bank ID**: A unique identifier for the bank.
-- **Account Number**: The account number associated with the entity.
-- **Entity ID**: A unique identifier for the entity.
-- **Entity Name**: The name of the entity (e.g., Sole Proprietorship, Corporation).
+The project uses the **IBM HI-Small** dataset, which consists of two main files:
 
-### HI-Small_Trans.csv
-This file contains transaction data with the following headers:
-- **Timestamp**: The date and time of the transaction.
-- **From Bank**: The bank initiating the transaction.
-- **Account**: The account number initiating the transaction.
-- **To Bank**: The receiving bank.
-- **Account**: The receiving account number.
-- **Amount Received**: The amount received in the transaction.
-- **Receiving Currency**: The currency in which the amount was received.
-- **Amount Paid**: The amount paid in the transaction.
-- **Payment Currency**: The currency in which the payment was made.
-- **Payment Format**: The format of the payment (e.g., Cheque, Reinvestment).
-- **Is Laundering**: A flag indicating whether the transaction is suspected of money laundering (0 for no, 1 for yes).
-
-Future iterations may involve larger datasets for more comprehensive analysis.
-
-## Model Details
-We are starting with a basic Graph Convolutional Network (GCN) with the following characteristics:
-- **Nodes**: Represent account numbers.
-- **Edges**: Represent transactions.
-- **Node Labels**: None.
-- **Edge Labels**: A tensor with two labels, one for sent transactions and one for received transactions.
-- **Encoding**: One-hot encoding for labels.
-
-Future enhancements may include exploring Hypergraph Convolution (HypergraphConv) for advanced modeling.
-
-## Technologies Used
-- **Programming Language**: Python
-- **Libraries**: PyTorch, TorchMetrics, Pandas, Matplotlib
-- **Tools**: Jupyter Notebook
+- **`dataset/HI-Small_accounts.csv`**: Contains information about bank accounts.
+- **`dataset/HI-Small_Trans.csv`**: Contains transactional data between accounts, with a label indicating whether a transaction is part of a money laundering scheme.
 
 ## Installation
-To set up the project locally, follow these steps:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/maxxie114/csc865-anti-money-laundering-ibm.git
-   ```
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/csc865-anti-money-laundering-ibm.git
+    cd csc865-anti-money-laundering-ibm
+    ```
 
-2. Navigate to the project directory:
-   ```bash
-   cd csc865-anti-money-laundering-ibm
-   ```
-
-3. Install the required Python packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Ensure that you have a CUDA-compatible GPU and the necessary drivers installed for PyTorch.
+2.  **Set up the project environment**:
+    This project uses `uv` and `pyproject.toml` for dependency management. If you don't have `uv`, install it first:
+    ```bash
+    pip install uv
+    ```
+    Then, create a virtual environment and install all dependencies:
+    ```bash
+    uv sync
+    ```
+    To activate the virtual environment:
+    ```bash
+    source .venv/bin/activate
+    ```
+    Note: The dependencies in `pyproject.toml` are configured for a CUDA 12.8 environment. If you have a different CUDA version or are using a CPU, `uv` will attempt to find compatible packages. If you encounter issues, you might need to manually adjust the PyTorch installation.
 
 ## Usage
-1. Open the Jupyter Notebook:
-   ```bash
-   jupyter notebook
-   ```
 
-2. Navigate to the `anti_money_laundering_ibm.ipynb` file and run the cells sequentially.
+All experiments are contained within Jupyter Notebooks (`.ipynb` files). To run an experiment:
 
-3. The notebook includes data loading, preprocessing, and model training steps.
+1.  **Start a Jupyter server**:
+    ```bash
+    jupyter notebook
+    ```
 
-## Future Plans
-- Explore larger datasets for more comprehensive analysis.
-- Investigate the use of Hypergraph Convolution (HypergraphConv) for advanced modeling.
-- Optimize the model for better performance and scalability.
+2.  **Open a notebook**:
+    Navigate to and open one of the main notebooks, such as `anti_money_laundering_ibm.ipynb` or `tabular_mlp.ipynb`.
+
+3.  **Run the cells**:
+    Execute the cells in the notebook sequentially to load the data, preprocess it, train the model, and evaluate the results.
+
+## Utilities
+
+- **`cuda_diagnose.py`**: A simple script to help diagnose your PyTorch and CUDA installation. Run it to ensure your environment is set up correctly for GPU training:
+  ```bash
+  python cuda_diagnose.py
+  ```
 
 ## Contributing
-Contributions are welcome! If you have suggestions for improvements or new features, please follow these steps:
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix:
-   ```bash
-   git checkout -b feature-name
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m "Add feature-name"
-   ```
-4. Push to your branch:
-   ```bash
-   git push origin feature-name
-   ```
-5. Open a pull request.
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
